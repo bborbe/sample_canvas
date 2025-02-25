@@ -10,152 +10,170 @@
             color: white;
             text-align: center;
         }
+
         canvas {
             border: 1px solid #333;
             display: block;
             margin: auto;
             background: #181818;
         }
+
+        a {
+            color: white;
+        }
     </style>
 </head>
 <body>
-    <h2>Trading Chart - 200 Candles with SMA-20</h2>
-    <canvas id="chartCanvas"></canvas>
+<h2>Trading Chart - 200 Candles with SMA-20</h2>
+<canvas id="chartCanvas"></canvas>
+<a href="javascript:download()">download</a>
 
-    <script>
-        const canvas = document.getElementById("chartCanvas");
-        const ctx = canvas.getContext("2d");
+<script>
+	const canvas = document.getElementById('chartCanvas');
+	const ctx = canvas.getContext('2d');
 
-        canvas.width = window.innerWidth * 0.9;
-        canvas.height = window.innerHeight * 0.7;
+	canvas.width = window.innerWidth * 0.9;
+	canvas.height = window.innerHeight * 0.7;
 
-        const margin = 50;
-        const chartHeight = canvas.height - margin * 2;
-        const chartWidth = canvas.width - margin * 2;
-        const numCandles = 200;
-        const smaPeriod = 20;
+	const margin = 50;
+	const chartHeight = canvas.height - margin * 2;
+	const chartWidth = canvas.width - margin * 2;
+	const numCandles = 200;
+	const smaPeriod = 20;
 
-        // Generate Random Candlestick Data (OHLC)
-        function generateData(num) {
-            let data = [];
-            let price = 100;
-            for (let i = 0; i < num; i++) {
-                let open = price;
-                let high = open + Math.random() * 10;
-                let low = open - Math.random() * 10;
-                let close = low + Math.random() * (high - low);
-                data.push({ open, high, low, close });
-                price = close + (Math.random() * 2 - 1) * 5;
-            }
-            return data;
-        }
+	// Generate Random Candlestick Data (OHLC)
+	function generateData(num) {
+		let data = [];
+		let price = 100;
+		for (let i = 0; i < num; i++) {
+			let open = price;
+			let high = open + Math.random() * 10;
+			let low = open - Math.random() * 10;
+			let close = low + Math.random() * (high - low);
+			data.push({open, high, low, close});
+			price = close + (Math.random() * 2 - 1) * 5;
+		}
+		return data;
+	}
 
-        const data = generateData(numCandles);
-        const maxPrice = Math.max(...data.map(d => d.high));
-        const minPrice = Math.min(...data.map(d => d.low));
+	const data = generateData(numCandles);
+	const maxPrice = Math.max(...data.map(d => d.high));
+	const minPrice = Math.min(...data.map(d => d.low));
 
-        // Scale Y-axis
-        function scaleY(price) {
-            return canvas.height - margin - ((price - minPrice) / (maxPrice - minPrice)) * chartHeight;
-        }
+	// Scale Y-axis
+	function scaleY(price) {
+		return canvas.height - margin - ((price - minPrice) / (maxPrice - minPrice)) * chartHeight;
+	}
 
-        // Compute SMA-20
-        function calculateSMA(data, period) {
-            let sma = [];
-            for (let i = 0; i < data.length; i++) {
-                if (i < period - 1) {
-                    sma.push(null); // Not enough data for SMA
-                } else {
-                    let sum = 0;
-                    for (let j = 0; j < period; j++) {
-                        sum += data[i - j].close;
-                    }
-                    sma.push(sum / period);
-                }
-            }
-            return sma;
-        }
+	// Compute SMA-20
+	function calculateSMA(data, period) {
+		let sma = [];
+		for (let i = 0; i < data.length; i++) {
+			if (i < period - 1) {
+				sma.push(null); // Not enough data for SMA
+			} else {
+				let sum = 0;
+				for (let j = 0; j < period; j++) {
+					sum += data[i - j].close;
+				}
+				sma.push(sum / period);
+			}
+		}
+		return sma;
+	}
 
-        const sma20 = calculateSMA(data, smaPeriod);
+	const sma20 = calculateSMA(data, smaPeriod);
 
-        // Draw Grid Lines
-        function drawGrid() {
-            ctx.strokeStyle = "#444";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for (let i = 0; i <= 5; i++) {
-                let y = margin + (chartHeight / 5) * i;
-                ctx.moveTo(margin, y);
-                ctx.lineTo(canvas.width - margin, y);
-            }
-            ctx.stroke();
-        }
+	// Draw Grid Lines
+	function drawGrid() {
+		ctx.strokeStyle = '#444';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		for (let i = 0; i <= 5; i++) {
+			let y = margin + (chartHeight / 5) * i;
+			ctx.moveTo(margin, y);
+			ctx.lineTo(canvas.width - margin, y);
+		}
+		ctx.stroke();
+	}
 
-        // Draw Candlesticks
-        function drawCandlesticks() {
-            const candleWidth = (chartWidth - (numCandles * 2)) / numCandles;
-            
-            data.forEach((d, i) => {
-                const x = margin + i * (candleWidth + 2);
-                const yOpen = scaleY(d.open);
-                const yClose = scaleY(d.close);
-                const yHigh = scaleY(d.high);
-                const yLow = scaleY(d.low);
-                const color = d.close > d.open ? "green" : "red";
+	// Draw Candlesticks
+	function drawCandlesticks() {
+		const candleWidth = (chartWidth - (numCandles * 2)) / numCandles;
 
-                // Draw wick
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(x + candleWidth / 2, yHigh);
-                ctx.lineTo(x + candleWidth / 2, yLow);
-                ctx.stroke();
+		data.forEach((d, i) => {
+			const x = margin + i * (candleWidth + 2);
+			const yOpen = scaleY(d.open);
+			const yClose = scaleY(d.close);
+			const yHigh = scaleY(d.high);
+			const yLow = scaleY(d.low);
+			const color = d.close > d.open ? 'green' : 'red';
 
-                // Draw candle body
-                ctx.fillStyle = color;
-                ctx.fillRect(
-                    x,
-                    Math.min(yOpen, yClose),
-                    candleWidth,
-                    Math.abs(yOpen - yClose) || 1  // Ensure visibility
-                );
-            });
-        }
+			// Draw wick
+			ctx.strokeStyle = color;
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(x + candleWidth / 2, yHigh);
+			ctx.lineTo(x + candleWidth / 2, yLow);
+			ctx.stroke();
 
-        // Draw SMA-20 Line
-        function drawSMA() {
-            ctx.strokeStyle = "yellow";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            let firstValid = true;
+			// Draw candle body
+			ctx.fillStyle = color;
+			ctx.fillRect(
+				x,
+				Math.min(yOpen, yClose),
+				candleWidth,
+				Math.abs(yOpen - yClose) || 1,  // Ensure visibility
+			);
+		});
+	}
 
-            const candleWidth = (chartWidth - (numCandles * 2)) / numCandles;
+	// Draw SMA-20 Line
+	function drawSMA() {
+		ctx.strokeStyle = 'yellow';
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		let firstValid = true;
 
-            for (let i = 0; i < sma20.length; i++) {
-                if (sma20[i] !== null) {
-                    const x = margin + i * (candleWidth + 2) + candleWidth / 2;
-                    const y = scaleY(sma20[i]);
+		const candleWidth = (chartWidth - (numCandles * 2)) / numCandles;
 
-                    if (firstValid) {
-                        ctx.moveTo(x, y);
-                        firstValid = false;
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                }
-            }
-            ctx.stroke();
-        }
+		for (let i = 0; i < sma20.length; i++) {
+			if (sma20[i] !== null) {
+				const x = margin + i * (candleWidth + 2) + candleWidth / 2;
+				const y = scaleY(sma20[i]);
 
-        function drawChart() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
-            drawCandlesticks();
-            drawSMA();
-        }
+				if (firstValid) {
+					ctx.moveTo(x, y);
+					firstValid = false;
+				} else {
+					ctx.lineTo(x, y);
+				}
+			}
+		}
+		ctx.stroke();
+	}
 
-        drawChart();
-    </script>
+	function drawChart() {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		drawGrid();
+		drawCandlesticks();
+		drawSMA();
+	}
+
+	drawChart();
+
+	function download() {
+		canvas.toBlob((blob) => {
+			const link = document.createElement('a');
+			link.href = URL.createObjectURL(blob);
+			link.download = 'canvas-image.png';
+			link.click();
+		}, 'image/png');
+	}
+
+</script>
+
+
 </body>
 </html>
 
